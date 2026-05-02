@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.sagip.manileno.network.ApiClient
 import com.sagip.manileno.network.CitizenLoginRequest
+import com.sagip.manileno.network.ResponderLoginRequest
 import com.sagip.manileno.network.LoginResponse
 import retrofit2.Call
 import retrofit2.Callback
@@ -15,16 +16,18 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        testCitizenLogin()
+        testResponderLogin()
     }
 
-    private fun testCitizenLogin() {
-        val request = CitizenLoginRequest(
-            contact_no = "09394228611",
-            password = "051705"
+
+
+    private fun testResponderLogin() {
+        val request = ResponderLoginRequest(
+            employee_no = "BFP-R-001",
+            password = "responder123"
         )
 
-        ApiClient.apiService.loginCitizen(request)
+        ApiClient.apiService.loginResponder(request)
             .enqueue(object : Callback<LoginResponse> {
 
                 override fun onResponse(
@@ -32,17 +35,17 @@ class MainActivity : AppCompatActivity() {
                     response: Response<LoginResponse>
                 ) {
                     if (response.isSuccessful) {
-                        Log.d("LOGIN_TEST", "Citizen login success: ${response.body()}")
+                        Log.d("LOGIN_TEST", "Responder login success: ${response.body()}")
                     } else {
                         Log.e(
                             "LOGIN_TEST",
-                            "Citizen login failed: ${response.code()} ${response.errorBody()?.string()}"
+                            "Responder login failed: ${response.code()} ${response.errorBody()?.string()}"
                         )
                     }
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Log.e("LOGIN_TEST", "Citizen login error: ${t.message}")
+                    Log.e("LOGIN_TEST", "Responder login error: ${t.message}")
                 }
             })
     }
