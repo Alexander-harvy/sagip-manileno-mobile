@@ -15,10 +15,33 @@ data class ResponderLoginRequest(
 )
 
 data class LoginResponse(
-    val success: Boolean? = null,
-    val message: String? = null,
-    val token: String? = null,
-    val role: String? = null
+    val success: Boolean,
+    val message: String,
+    val data: LoginData?
+)
+
+data class LoginData(
+    val token: String?,
+    val user: UserData?,
+    val responder: ResponderData?
+)
+
+data class UserData(
+    val user_id: Int,
+    val first_name: String,
+    val last_name: String,
+    val contact_no: String
+)
+
+data class ResponderData(
+    val responder_id: Int,
+    val dept_id: Int,
+    val substation_id: Int,
+    val employee_no: String,
+    val username: String,
+    val first_name: String,
+    val last_name: String,
+    val contact_no: String
 )
 
 interface ApiService {
