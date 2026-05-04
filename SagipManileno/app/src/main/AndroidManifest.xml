@@ -12,6 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SagipManileno">
+        <activity android:name=".ui.citizen.CitizenDashboardActivity" />
+        <activity android:name=".ui.responder.ResponderDashboardActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
