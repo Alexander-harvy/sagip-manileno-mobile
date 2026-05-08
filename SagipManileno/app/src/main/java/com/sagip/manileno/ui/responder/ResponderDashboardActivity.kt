@@ -24,6 +24,12 @@ class ResponderDashboardActivity : AppCompatActivity() {
         tvName.text = name
         tvContact.text = contact
 
+        val btnAssignedIncidents = findViewById<Button>(R.id.btnAssignedIncidents)
+
+        btnAssignedIncidents.setOnClickListener {
+            startActivity(Intent(this, AssignedIncidentsActivity::class.java))
+        }
+
         val btnLogout = findViewById<Button>(R.id.btnLogout)
 
         btnLogout.setOnClickListener {

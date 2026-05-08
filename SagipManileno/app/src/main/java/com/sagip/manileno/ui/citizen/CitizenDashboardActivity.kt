@@ -9,6 +9,7 @@ import com.sagip.manileno.R
 import com.sagip.manileno.utils.TokenManager
 import android.widget.TextView
 
+
 class CitizenDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +24,18 @@ class CitizenDashboardActivity : AppCompatActivity() {
 
         tvName.text = name
         tvContact.text = contact
+
+        val btnReport = findViewById<Button>(R.id.btnReport)
+
+        btnReport.setOnClickListener {
+            startActivity(Intent(this, ReportIncidentActivity::class.java))
+        }
+
+        val btnMyIncidents = findViewById<Button>(R.id.btnMyIncidents)
+
+        btnMyIncidents.setOnClickListener {
+            startActivity(Intent(this, MyIncidentsActivity::class.java))
+        }
 
         val btnLogout = findViewById<Button>(R.id.btnLogout)
 
