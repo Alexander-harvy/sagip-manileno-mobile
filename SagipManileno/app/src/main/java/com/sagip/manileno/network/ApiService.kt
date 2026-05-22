@@ -52,7 +52,8 @@ data class CreateIncidentRequest(
     val incident_type: String,
     val description: String,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val source: String? = null
 )
 
 data class GenericResponse(

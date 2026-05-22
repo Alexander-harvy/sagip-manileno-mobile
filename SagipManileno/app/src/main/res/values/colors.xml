@@ -2,4 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="sagip_navy">#0B132B</color>
+    <color name="sagip_blue">#3A86FF</color>
+    <color name="sagip_red">#F72525</color>
+    <color name="sagip_orange">#FF6B00</color>
+    <color name="sagip_gray">#E5E5E5</color>
+    <color name="sagip_dark_text">#111111</color>
 </resources>
