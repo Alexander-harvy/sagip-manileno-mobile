@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -24,6 +26,12 @@
         <activity android:name=".ui.citizen.IncidentDetailsActivity" />
         <activity android:name=".ui.responder.AssignedIncidentsActivity" />
         <activity android:name=".ui.responder.ResponderIncidentDetailsActivity" />
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCHtjI6R20_qyeGZLq_-8STNaJ1A78mKTM" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -1,49 +1,51 @@
 package com.sagip.manileno
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.sagip.manileno.network.*
+import com.sagip.manileno.network.ApiClient
+import com.sagip.manileno.network.CitizenLoginRequest
+import com.sagip.manileno.network.LoginResponse
+import com.sagip.manileno.network.ResponderLoginRequest
+import com.sagip.manileno.ui.citizen.CitizenDashboardActivity
+import com.sagip.manileno.ui.responder.ResponderDashboardActivity
+import com.sagip.manileno.utils.TokenManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.content.Intent
-import com.sagip.manileno.utils.TokenManager
-import com.sagip.manileno.ui.citizen.CitizenDashboardActivity
-import com.sagip.manileno.ui.responder.ResponderDashboardActivity
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var inputIdentifier: EditText
+    private lateinit var inputPassword: EditText
+    private lateinit var btnLogin: Button
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val tokenManager = TokenManager(this)
+        tokenManager = TokenManager(this)
 
         val token = tokenManager.getToken()
         val role = tokenManager.getRole()
 
         if (token != null && role != null) {
-            if (role == "user") {
-                startActivity(Intent(this, CitizenDashboardActivity::class.java))
-            } else {
-                startActivity(Intent(this,ResponderDashboardActivity::class.java))
-            }
+            routeByRole(role)
             finish()
+            return
         }
 
-        val spinner = findViewById<Spinner>(R.id.spinnerRole)
-        val inputIdentifier = findViewById<EditText>(R.id.inputIdentifier)
-        val inputPassword = findViewById<EditText>(R.id.inputPassword)
-        val btnLogin = findViewById<Button>(R.id.btnLogin)
-
-        val roles = arrayOf("Citizen", "Responder")
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roles)
+        inputIdentifier = findViewById(R.id.inputIdentifier)
+        inputPassword = findViewById(R.id.inputPassword)
+        btnLogin = findViewById(R.id.btnLogin)
 
         btnLogin.setOnClickListener {
-            val identifier = inputIdentifier.text.toString()
-            val password = inputPassword.text.toString()
-            val selectedRole = spinner.selectedItem.toString()
+            val identifier = inputIdentifier.text.toString().trim()
+            val password = inputPassword.text.toString().trim()
 
             if (identifier.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
@@ -51,90 +53,100 @@ class MainActivity : AppCompatActivity() {
             }
 
             btnLogin.isEnabled = false
-
-            if (selectedRole == "Citizen") {
-                loginCitizen(identifier, password, btnLogin)
-            } else {
-                loginResponder(identifier, password, btnLogin)
-            }
+            loginCitizenFirst(identifier, password)
         }
     }
 
-    private fun loginCitizen(contactNo: String, password: String, btnLogin: Button) {
-        val request = CitizenLoginRequest(contact_no = contactNo, password = password)
+    private fun loginCitizenFirst(identifier: String, password: String) {
+        val request = CitizenLoginRequest(
+            contact_no = identifier,
+            password = password
+        )
 
         ApiClient.getClient(this).loginCitizen(request)
             .enqueue(object : Callback<LoginResponse> {
 
-                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                    btnLogin.isEnabled = true
-                    if (response.isSuccessful) {
-                        val token = response.body()?.data?.token
+                override fun onResponse(
+                    call: Call<LoginResponse>,
+                    response: Response<LoginResponse>
+                ) {
+                    val data = response.body()?.data
+                    val token = data?.token
+                    val user = data?.user
 
-                        if (token != null) {
-                            val tokenManager = TokenManager(this@MainActivity)
-                            tokenManager.saveToken(token)
-                            tokenManager.saveRole("user")
+                    if (response.isSuccessful && token != null && user != null) {
+                        tokenManager.saveToken(token)
+                        tokenManager.saveRole("user")
+                        tokenManager.saveUser(
+                            "${user.first_name} ${user.last_name}",
+                            user.contact_no
+                        )
 
-                            val user = response.body()?.data?.user
-
-                            tokenManager.saveUser(
-                                "${user?.first_name} ${user?.last_name}",
-                                user?.contact_no ?: ""
-                            )
-
-                            startActivity(Intent(this@MainActivity, CitizenDashboardActivity::class.java))
-                            finish()
-                            return
-                        }
+                        routeByRole("user")
+                        finish()
                     } else {
-                        Toast.makeText(this@MainActivity, "Citizen Login Failed", Toast.LENGTH_SHORT).show()
+                        loginResponderFallback(identifier, password)
                     }
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Toast.makeText(this@MainActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-                    btnLogin.isEnabled = true
+                    loginResponderFallback(identifier, password)
                 }
             })
     }
 
-    private fun loginResponder(employeeNo: String, password: String, btnLogin: Button) {
-        val request = ResponderLoginRequest(employee_no = employeeNo, password = password)
+    private fun loginResponderFallback(identifier: String, password: String) {
+        val request = ResponderLoginRequest(
+            employee_no = identifier,
+            password = password
+        )
 
         ApiClient.getClient(this).loginResponder(request)
             .enqueue(object : Callback<LoginResponse> {
-                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+
+                override fun onResponse(
+                    call: Call<LoginResponse>,
+                    response: Response<LoginResponse>
+                ) {
                     btnLogin.isEnabled = true
-                    if (response.isSuccessful) {
-                        btnLogin.isEnabled = true
-                        val token = response.body()?.data?.token
 
-                        if (token != null) {
-                            val tokenManager = TokenManager(this@MainActivity)
-                            tokenManager.saveToken(token)
-                            tokenManager.saveRole("responder")
+                    val data = response.body()?.data
+                    val token = data?.token
+                    val responder = data?.responder
 
-                            val responder = response.body()?.data?.responder
+                    if (response.isSuccessful && token != null && responder != null) {
+                        tokenManager.saveToken(token)
+                        tokenManager.saveRole("responder")
+                        tokenManager.saveUser(
+                            "${responder.first_name} ${responder.last_name}",
+                            responder.contact_no
+                        )
 
-                            tokenManager.saveUser(
-                                "${responder?.first_name} ${responder?.last_name}",
-                                responder?.contact_no ?: ""
-                            )
-
-                            startActivity(Intent(this@MainActivity, ResponderDashboardActivity::class.java))
-                            finish()
-                            return
-                        }
+                        routeByRole("responder")
+                        finish()
                     } else {
-                        Toast.makeText(this@MainActivity, "Responder Login Failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Invalid login credentials", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Toast.makeText(this@MainActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
                     btnLogin.isEnabled = true
+                    Toast.makeText(
+                        this@MainActivity,
+                        t.message ?: "Login failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             })
+    }
+
+    private fun routeByRole(role: String) {
+        val intent = when (role) {
+            "user" -> Intent(this, CitizenDashboardActivity::class.java)
+            "responder" -> Intent(this, ResponderDashboardActivity::class.java)
+            else -> Intent(this, MainActivity::class.java)
+        }
+
+        startActivity(intent)
     }
 }
